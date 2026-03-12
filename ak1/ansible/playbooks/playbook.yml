@@ -1,0 +1,30 @@
+---
+#create a group and two users in the group and install program on vm2
+- name: configure vm2
+  hosts: vm2
+  become: true
+
+  tasks:
+    - name: create group
+      ansible.builtin.group:
+        name: kulefolk
+        state: present
+
+    - name: create user 1
+      ansible.builtin.user:
+        name: silje
+        groups: appusers
+        append: true
+        state: present
+
+    - name: create user 2
+      ansible.builtin.user:
+        name: martin
+        groups: appusers
+        append: true
+        state: present
+
+    - name: install program
+      ansible.builtin.apt:
+        name: htop
+        state: present
