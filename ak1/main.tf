@@ -154,7 +154,7 @@ resource "azurerm_linux_virtual_machine" "vm1" {
   name                = "vm1"
   resource_group_name = azurerm_resource_group.ak1.name
   location            = azurerm_resource_group.ak1.location
-  size                = "Standard_F2"
+  size                = "Standard_B2as_v2"
   admin_username      = "alespiadm"
   admin_password      = "Password123"
   network_interface_ids = [
@@ -180,7 +180,7 @@ resource "azurerm_linux_virtual_machine" "vm2" {
   name                = "vm2"
   resource_group_name = azurerm_resource_group.ak1.name
   location            = azurerm_resource_group.ak1.location
-  size                = "Standard_F2"
+  size                = "Standard_B2as_v2"
   admin_username      = "alespiadm"
   admin_password      = "Password123"
   network_interface_ids = [

@@ -13,14 +13,14 @@
     - name: create user 1
       ansible.builtin.user:
         name: silje
-        groups: appusers
+        groups: kulefolk
         append: true
         state: present
 
     - name: create user 2
       ansible.builtin.user:
         name: martin
-        groups: appusers
+        groups: kulefolk
         append: true
         state: present
 
