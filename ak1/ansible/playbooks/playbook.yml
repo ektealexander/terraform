@@ -24,7 +24,11 @@
         append: true
         state: present
 
+    - name: update cache
+      ansible.builtin.apt:
+        update_cache: true
+
     - name: install program
       ansible.builtin.apt:
-        name: htop
+        name: nginx
         state: present
