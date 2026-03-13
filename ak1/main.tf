@@ -1,3 +1,7 @@
+# =============================================================================
+# terraform config
+# =============================================================================
+
 terraform {
   required_providers {
     azurerm = {
@@ -7,58 +11,69 @@ terraform {
   }
 }
 
-#configure microsoft azure provider
+# -----------------------------------------------------------------------------
+# provider
+# -----------------------------------------------------------------------------
+
 provider "azurerm" {
   features {}
   subscription_id = "fedc4ad6-1398-4394-9fdc-fe5b7c031583"
 }
 
+# -----------------------------------------------------------------------------
+# resource group
+# -----------------------------------------------------------------------------
 
-
-#create a resource group
-resource "azurerm_resource_group" "terraform" {
-  name     = "terraform"
+resource "azurerm_resource_group" "ak1" {
+  name     = "ak1"
   location = "Norway East"
 }
 
-#create a virtual network
-resource "azurerm_virtual_network" "example" {
-  name                = "example-network"
+# -----------------------------------------------------------------------------
+# vnet
+# -----------------------------------------------------------------------------
+
+resource "azurerm_virtual_network" "main" {
+  name                = "terraform-vnet"
   address_space       = ["192.168.0.0/16"]
-  location            = azurerm_resource_group.terraform.location
-  resource_group_name = azurerm_resource_group.terraform.name
+  location            = azurerm_resource_group.ak1.location
+  resource_group_name = azurerm_resource_group.ak1.name
 }
 
-#subnet for vm1
+# -----------------------------------------------------------------------------
+# subnets
+# -----------------------------------------------------------------------------
+
 resource "azurerm_subnet" "vm1" {
   name                 = "vm1-subnet"
-  resource_group_name  = azurerm_resource_group.terraform.name
-  virtual_network_name = azurerm_virtual_network.example.name
+  resource_group_name  = azurerm_resource_group.ak1.name
+  virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["192.168.1.0/24"]
 }
 
-#subnet for vm2
 resource "azurerm_subnet" "vm2" {
   name                 = "vm2-subnet"
-  resource_group_name  = azurerm_resource_group.terraform.name
-  virtual_network_name = azurerm_virtual_network.example.name
+  resource_group_name  = azurerm_resource_group.ak1.name
+  virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["192.168.2.0/24"]
 }
 
-#public ip for vm1 for ssh
+# -----------------------------------------------------------------------------
+# vm1 network
+# -----------------------------------------------------------------------------
+
 resource "azurerm_public_ip" "vm1" {
   name                = "vm1-public-ip"
-  location            = azurerm_resource_group.terraform.location
-  resource_group_name = azurerm_resource_group.terraform.name
+  location            = azurerm_resource_group.ak1.location
+  resource_group_name = azurerm_resource_group.ak1.name
   allocation_method   = "Static"
   sku                 = "Standard"
 }
 
-#nsg for vm1 for ssh
 resource "azurerm_network_security_group" "vm1" {
   name                = "vm1-nsg"
-  location            = azurerm_resource_group.terraform.location
-  resource_group_name = azurerm_resource_group.terraform.name
+  location            = azurerm_resource_group.ak1.location
+  resource_group_name = azurerm_resource_group.ak1.name
 
   security_rule {
     name                       = "AllowSSH"
@@ -75,8 +90,8 @@ resource "azurerm_network_security_group" "vm1" {
 
 resource "azurerm_network_interface" "vm1" {
   name                = "vm1-nic"
-  location            = azurerm_resource_group.terraform.location
-  resource_group_name = azurerm_resource_group.terraform.name
+  location            = azurerm_resource_group.ak1.location
+  resource_group_name = azurerm_resource_group.ak1.name
 
   ip_configuration {
     name                          = "internal"
@@ -91,30 +106,14 @@ resource "azurerm_network_interface_security_group_association" "vm1_nsg" {
   network_security_group_id = azurerm_network_security_group.vm1.id
 }
 
-#vm2 for ansible
-resource "azurerm_network_interface" "vm2" {
-  name                = "vm2-nic"
-  location            = azurerm_resource_group.terraform.location
-  resource_group_name = azurerm_resource_group.terraform.name
+# -----------------------------------------------------------------------------
+# vm2 network
+# -----------------------------------------------------------------------------
 
-  ip_configuration {
-    name                          = "internal"
-    subnet_id                     = azurerm_subnet.vm2.id
-    private_ip_address_allocation = "Static"
-    private_ip_address            = "192.168.2.4"
-  }
-}
-
-resource "azurerm_network_interface_security_group_association" "vm2_nsg" {
-  network_interface_id      = azurerm_network_interface.vm2.id
-  network_security_group_id = azurerm_network_security_group.ssh_to_vm2.id
-}
-
-#nsg for vm2 for ssh
 resource "azurerm_network_security_group" "ssh_to_vm2" {
   name                = "vm2-nsg"
-  location            = azurerm_resource_group.terraform.location
-  resource_group_name = azurerm_resource_group.terraform.name
+  location            = azurerm_resource_group.ak1.location
+  resource_group_name = azurerm_resource_group.ak1.name
 
   security_rule {
     name                       = "AllowSSHFromVM1"
@@ -129,12 +128,32 @@ resource "azurerm_network_security_group" "ssh_to_vm2" {
   }
 }
 
+resource "azurerm_network_interface" "vm2" {
+  name                = "vm2-nic"
+  location            = azurerm_resource_group.ak1.location
+  resource_group_name = azurerm_resource_group.ak1.name
 
-#vm1 for ansible
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.vm2.id
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "192.168.2.4"
+  }
+}
+
+resource "azurerm_network_interface_security_group_association" "vm2_nsg" {
+  network_interface_id      = azurerm_network_interface.vm2.id
+  network_security_group_id = azurerm_network_security_group.ssh_to_vm2.id
+}
+
+# -----------------------------------------------------------------------------
+# vms
+# -----------------------------------------------------------------------------
+
 resource "azurerm_linux_virtual_machine" "vm1" {
   name                = "vm1"
-  resource_group_name = azurerm_resource_group.terraform.name
-  location            = azurerm_resource_group.terraform.location
+  resource_group_name = azurerm_resource_group.ak1.name
+  location            = azurerm_resource_group.ak1.location
   size                = "Standard_F2"
   admin_username      = "alespiadm"
   admin_password      = "Password123"
@@ -157,11 +176,10 @@ resource "azurerm_linux_virtual_machine" "vm1" {
   }
 }
 
-#vm2 for ansible
 resource "azurerm_linux_virtual_machine" "vm2" {
   name                = "vm2"
-  resource_group_name = azurerm_resource_group.terraform.name
-  location            = azurerm_resource_group.terraform.location
+  resource_group_name = azurerm_resource_group.ak1.name
+  location            = azurerm_resource_group.ak1.location
   size                = "Standard_F2"
   admin_username      = "alespiadm"
   admin_password      = "Password123"
@@ -184,8 +202,11 @@ resource "azurerm_linux_virtual_machine" "vm2" {
   }
 }
 
-# VM1 offentlig IP (for SSH fra PC)
+# -----------------------------------------------------------------------------
+# outputs
+# -----------------------------------------------------------------------------
+
 output "vm1_public_ip" {
   value       = azurerm_public_ip.vm1.ip_address
-  description = "Offentlig IP for VM1 (SSH: ssh alespiadm@<denne>)"
+  description = "Public IP for VM1 (SSH: ssh alespiadm@<this-ip>)"
 }

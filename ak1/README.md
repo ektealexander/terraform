@@ -1,43 +1,60 @@
-# Arbeidskrav 1 – Terraform + Ansible
+# Arbeidskrav 1 – Terraform
 
-ST – Azure: to Linux-VM'er i Azure (Terraform), der VM1 er Ansible-controller og VM2 konfigureres med Ansible.
+## Arkitektur
 
-## Oppsett
+- **VM1**: Offentlig IP, SSH fra internett, subnet `192.168.1.0/24`
+- **VM2**: Kun privat IP `192.168.2.4`, subnet `192.168.2.0/24`
+- **NSG**: En NSG per VM – VM1 tillater SSH fra internett; VM2 tillater kun SSH fra `192.168.1.0/24`
 
-- **VM1** (ansible-controller): Offentlig IP, SSH fra internett, subnet `192.168.1.0/24`. Ansible installeres manuelt på VM1.
-- **VM2**: Kun privat IP `192.168.2.4`, subnet `192.168.2.0/24`. Nås bare fra VM1.
-- **NSG**: Det brukes én NSG per VM (anbefalt for tydelige regler): VM1-nsg tillater SSH (22) fra internett; VM2-nsg tillater kun SSH fra `192.168.1.0/24` (kun VM1). Oppgaven krever «minst 1 NSG mellom VM'ene» – det er oppfylt.
+---
 
-Ingen custom_data/cloud-init – alt gjøres manuelt på VM1.
+## Slik kjøres Terraform-koden
 
-## Forutsetninger
-
-- Azure CLI installert og innlogget (`az login`)
-- Terraform installert
-- Abonnement satt i `main.tf` (eller via miljøvariabler)
-
-## Kjør Terraform
+### 1. Last ned koden fra GitHub
 
 ```bash
-cd ak1
+git clone https://github.com/ektealexander/terraform.git
+cd terraform/ak1
+```
+
+### 2. Forutsetninger
+
+- **Terraform**
+- **Azure CLI** – installert og innlogget: `az login --tenant <tenant-id>`
+- **Azure-abonnement** – satt i `main.tf` under `provider "azurerm"` (`subscription_id`)
+
+Sjekk at du er innlogget og har riktig abonnement:
+
+```bash
+az account show
+```
+
+### 3. Init, plan og apply
+
+Fra mappen `ak1` (der `main.tf` ligger):
+
+```bash
 terraform init
 terraform plan
 terraform apply
 ```
 
-Etter apply – hent VM1 sin offentlige IP:
+- `init` henter provider (azurerm) og initialiserer backend
+- `plan` viser endringer uten å gjøre dem
+- `apply` oppretter ressursene (resource group, vnet, subnets, NSGer, NIC-er, VM1 og VM2)
+
+### 4. Hent VM1 sin offentlige IP
+
+Etter vellykket apply:
 
 ```bash
 terraform output vm1_public_ip
 ```
+---
 
-**VM1-IP uten output i main.tf:** Du kan alltid hente IP fra Terraform state eller Azure CLI:
-- `terraform state show azurerm_public_ip.vm1` (se hele ressursen, inkl. `ip_address`)
-- Azure CLI: `az network public-ip show -g terraform -n vm1-public-ip --query ipAddress -o tsv`
+## Ansible fra VM1
 
-## Ansible fra VM1 (manuelt)
-
-1. **SSH til VM1** (fra din PC):
+1. **SSH til VM1**:
    ```bash
    ssh alespiadm@<vm1_public_ip>
    ```
@@ -48,30 +65,30 @@ terraform output vm1_public_ip
    sudo apt update && sudo apt install -y ansible sshpass
    ```
 
-3. **Kopier `ak1/ansible` til VM1** (fra din PC, i en annen terminal, stå i repo-roten):
-   ```bash
-   scp -r ak1/ansible alespiadm@<vm1_public_ip>:~/
-   ```
+3. **Kopier `ak1/ansible` til VM1**.
 
-4. **På VM1, kjør playbook** (første gang: skriv `yes` ved spørsmål om VM2 sin host-nøkkel):
+4. **På VM1, kjør playbook**:
    ```bash
    cd ~/ansible
    ansible-playbook playbooks/playbook.yml
    ```
-   (Inventory er satt i `ansible.cfg` til `./hosts`.)
 
-### Innhold i `ak1/ansible/`
+### Ansible-filer
 
 | Fil / mappe | Hensikt |
 |-------------|--------|
-| `playbooks/playbook.yml` | Playbook som konfigurerer VM2 (gruppe, brukere, pakke). |
-| `hosts` | Inventory: VM2 med `ansible_host=192.168.2.4`, bruker og passord. |
-| `ansible.cfg` | Setter `inventory = ./hosts` så du ikke trenger `-i` ved kjøring. |
+| `playbooks/playbook.yml` | Konfigurerer VM2 |
+| `hosts` | Inventory: VM2 med `ansible_host=192.168.2.4` |
+| `ansible.cfg` | Setter `inventory = ./hosts` |
 
-### Hva playbooken gjør på VM2
+Playbooken oppretter gruppen `kulefolk`, brukere og installerer `htop` på VM2
 
-- Oppretter gruppen `kulefolk`
-- Oppretter brukerne `silje` og `martin` (med gruppe `appusers` – endre til `kulefolk` i playbook for konsistens om du vil)
-- Installerer `htop`
+---
 
-Du kan bytte gruppe/brukernavn eller program (f.eks. `nginx`, `tree`) i `ansible/playbooks/playbook.yml` og kjøre playbook på nytt.
+### Rydde opp
+
+Fjerner alle ressursene som Terraform har opprettet:
+
+```bash
+terraform destroy
+```
