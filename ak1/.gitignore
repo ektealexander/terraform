@@ -1,0 +1,25 @@
+# Terraform — provider cache, modules (large binaries; reproducible via lock file)
+.terraform/
+
+# State — sensitive; use remote backend (e.g. Azure Storage) for collaboration
+*.tfstate
+*.tfstate.*
+
+# Variable files that often hold secrets (remove this line if you only commit safe examples)
+*.tfvars
+*.tfvars.json
+
+# Local overrides and transient files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+crash.log
+crash.*.log
+
+# CLI config that may reference credentials
+.terraformrc
+terraform.rc
+
+# Ansible — failed playbook retries
+*.retry
