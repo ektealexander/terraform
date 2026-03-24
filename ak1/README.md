@@ -1,37 +1,37 @@
-# Arbeidskrav 1 – Terraform
+# ST - Arbeidskrav 1
 
-## Arkitektur
+## Architecture
 
-- **VM1**: Offentlig IP, SSH fra internett, subnet `192.168.1.0/24`
-- **VM2**: Kun privat IP `192.168.2.4`, subnet `192.168.2.0/24`
-- **NSG**: En NSG per VM – VM1 tillater SSH fra internett; VM2 tillater kun SSH fra `192.168.1.0/24`
+- **VM1**: Public IP, SSH from the internet, subnet `192.168.1.0/24`
+- **VM2**: Private IP only `192.168.2.4`, subnet `192.168.2.0/24`
+- **NSG**: One NSG per VM – VM1 allows SSH from the internet; VM2 allows SSH only from `192.168.1.0/24`
 
 ---
 
-## Slik kjøres Terraform-koden
+## Running the Terraform code
 
-### 1. Last ned koden fra GitHub
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/ektealexander/terraform.git
 cd terraform/ak1
 ```
 
-### 2. Forutsetninger
+### 2. Prerequisites
 
-- **Terraform**
-- **Azure CLI** – installert og innlogget: `az login --tenant <tenant-id>`
-- **Azure-abonnement** – satt i `main.tf` under `provider "azurerm"` (`subscription_id`)
+- **Terraform** installed
+- **Azure CLI** – installed and signed in: `az login --tenant <tenant-id>`
+- **Azure subscription** – set in `main.tf` under `provider "azurerm"` (`subscription_id`)
 
-Sjekk at du er innlogget og har riktig abonnement:
+Confirm you are signed in and using the intended subscription:
 
 ```bash
 az account show
 ```
 
-### 3. Init, plan og apply
+### 3. Init, plan, and apply
 
-Fra mappen `ak1` (der `main.tf` ligger):
+From the `ak1` folder (where `main.tf` lives):
 
 ```bash
 terraform init
@@ -39,55 +39,76 @@ terraform plan
 terraform apply
 ```
 
-- `init` henter provider (azurerm) og initialiserer backend
-- `plan` viser endringer uten å gjøre dem
-- `apply` oppretter ressursene (resource group, vnet, subnets, NSGer, NIC-er, VM1 og VM2)
+- `init` downloads the provider (azurerm) and initializes the working directory
+- `plan` shows changes without applying them
+- `apply` creates the resources (resource group, VNet, subnets, NSGs, NICs, VM1 and VM2)
 
-### 4. Hent VM1 sin offentlige IP
+### 4. Get VM1’s public IP
 
-Etter vellykket apply:
+After a successful apply:
 
 ```bash
 terraform output vm1_public_ip
 ```
+
 ---
 
-## Ansible fra VM1
+## Ansible from VM1
 
-1. **SSH til VM1**:
+1. **SSH to VM1**:
+
    ```bash
    ssh alespiadm@<vm1_public_ip>
    ```
-   Passord: `Password123`
 
-2. **Installer Ansible og sshpass** på VM1:
+   Password: `Password123`
+
+2. **Install Ansible and sshpass** on VM1:
+
    ```bash
    sudo apt update && sudo apt install -y ansible sshpass
    ```
 
-3. **Kopier `ak1/ansible` til VM1**.
+3. **Copy `ak1/ansible` to VM1**.
 
-4. **På VM1, kjør playbook**:
+4. **On VM1, run the playbook**:
+
    ```bash
    cd ~/ansible
    ansible-playbook playbooks/playbook.yml
    ```
 
-### Ansible-filer
+### Ansible files
 
-| Fil / mappe | Hensikt |
-|-------------|--------|
-| `playbooks/playbook.yml` | Konfigurerer VM2 |
-| `hosts` | Inventory: VM2 med `ansible_host=192.168.2.4` |
-| `ansible.cfg` | Setter `inventory = ./hosts` |
+| File / folder | Purpose |
+|---------------|---------|
+| `playbooks/playbook.yml` | Configures VM2 |
+| `hosts` | Inventory: VM2 with `ansible_host=192.168.2.4` |
+| `ansible.cfg` | Sets `inventory = ./hosts` |
 
-Playbooken oppretter gruppen `kulefolk`, brukere og installerer `htop` på VM2
+The playbook creates the group `kulefolk`, adds users, and installs **nginx** on VM2.
+
+### Verifying Ansible on VM2
+
+From **VM1**, SSH to VM2 (same admin user and password as in `main.tf`):
+
+```bash
+ssh alespiadm@192.168.2.4
+```
+
+Then run:
+
+| Check | Command | What you want to see |
+|--------|---------|----------------------|
+| Group exists | `getent group kulefolk` | A line starting with `kulefolk:` and listing member users |
+| Users in the group | `id silje` and `id martin` | `groups=` includes `kulefolk` |
+| nginx running | `sudo systemctl status nginx` | `running` |
 
 ---
 
-### Rydde opp
+## Cleanup
 
-Fjerner alle ressursene som Terraform har opprettet:
+Removes all resources Terraform created:
 
 ```bash
 terraform destroy

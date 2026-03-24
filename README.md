@@ -1,23 +1,43 @@
-## Terraform – Arbeid i faget skytjenester
+## Cloud – Terraform
 
-Dette repoet er en samling av arbeidskrav og øvingsoppgaver i faget **skytjenester**, med fokus på infrastruktur som kode i sky (særlig **Azure**) ved hjelp av **Terraform** og relaterte verktøy.
+This repository is a collection of coursework and lab exercises for **cloud services**, with a focus on infrastructure as code (IaC) in the cloud (**Azure**) using **Terraform**.
 
-Repoet fungerer som en teknisk logg/rapport for det praktiske arbeidet.
-
----
-
-## Struktur
-
-Arbeidet er organisert i undermapper – typisk én mappe per oppgave eller arbeidskrav. Hver slik mappe har sin egen README som beskriver innholdet og hvordan koden kjøres.
+The repo serves as a technical log of that work.
 
 ---
 
-## Komme i gang
+## Layout
 
-1. **Klon repoet**
+Work is organized in subfolders—typically one folder per assignment or exercise. Each folder has its own README describing the contents and how to run the code.
+
+---
+
+## Prerequisites
+
+- [Terraform](https://developer.hashicorp.com/terraform/install) installed
+- Access to an Azure subscription and a way to authenticate the Azure provider (for example [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) with `az login`, or a service principal via environment variables)
+
+Details vary by exercise; check each subfolder’s README.
+
+---
+
+## Getting started
+
+1. **Clone the repository**
+
    ```bash
    git clone https://github.com/ektealexander/terraform.git
    cd terraform
    ```
 
-2. **Gå inn i den mappen du vil jobbe med** og les README-filen der for oppgavens krav og kjøreinstrukser.
+2. **Open the folder** for the exercise you want and read its README.
+
+3. **From that folder**, run Terraform as described there. A typical flow looks like:
+
+   ```bash
+   terraform init
+   terraform plan
+   terraform apply
+   ```
+
+   Use `terraform destroy` when you want to tear down resources created by that configuration.
