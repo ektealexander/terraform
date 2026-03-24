@@ -1,6 +1,6 @@
 ## Cloud – Terraform
 
-This repository is a collection of coursework and lab exercises for **cloud services**, with a focus on infrastructure as code (IaC) in the cloud (**Azure**) using **Terraform**.
+This repository is a collection of lab exercises for **cloud services**, with a focus on infrastructure as code (IaC) in the cloud (**Azure**) using **Terraform**.
 
 The repo serves as a technical log of that work.
 
@@ -40,4 +40,8 @@ Details vary by exercise; check each subfolder’s README.
    terraform apply
    ```
 
-   Use `terraform destroy` when you want to tear down resources created by that configuration.
+4. When you want to tear down the resources created by **Terraform** perform: 
+
+   ```bash
+   terraform destroy
+   ```
