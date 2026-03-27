@@ -1,0 +1,30 @@
+# Terraform working directory (providers/modules cache)
+**/.terraform/*
+
+# State files (sensitive; do not commit)
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+
+# Terraform plans and CLI vars
+*.tfplan
+*.plan
+
+# Variable files that often hold secrets (remove this line if you only commit safe examples)
+*.tfvars
+*.tfvars.json
+
+# Local overrides and transient files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+crash.log
+crash.*.log
+
+# Terraform lock file should be committed for provider consistency
+!.terraform.lock.hcl
+
+# CLI config that may reference credentials
+.terraformrc
+terraform.rc

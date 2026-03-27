@@ -1,0 +1,42 @@
+#cloud-config
+# =============================================================================
+# cloud-init: nginx + health check for lb probe
+# changes: edit this file to change packages or web content
+# =============================================================================
+
+#update and upgrade packages
+package_update: true
+package_upgrade: true
+
+#nginx package
+packages:
+  - nginx
+
+#write health file for lb probe
+write_files:
+  - path: /var/www/html/health
+    content: |
+      ok
+    permissions: "0644"
+
+#write index.html file for web content
+runcmd:
+  - |
+      bash -lc 'cat > /var/www/html/index.html <<EOF
+
+      <!doctype html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <title>temu web shop</title>
+        </head>
+        <body>
+          <h1>velkommen til webshop</h1>
+          <p>served by: <strong>$(hostname)</strong></p>
+        </body>
+      </html>
+
+      EOF'
+
+  - systemctl enable nginx
+  - systemctl restart nginx
