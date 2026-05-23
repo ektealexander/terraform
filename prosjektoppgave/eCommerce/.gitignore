@@ -1,0 +1,4 @@
+# if you run django locally inside this folder by mistake
+__pycache__/
+*.py[cod]
+.Python

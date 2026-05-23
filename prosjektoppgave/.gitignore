@@ -1,0 +1,58 @@
+# Terraform working directory (providers/modules cache)
+**/.terraform/*
+
+# State files (sensitive; do not commit)
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+
+# Terraform plans and CLI vars
+*.tfplan
+*.plan
+
+# Single variable file (subscription, email, mysql password)
+terraform.tfvars
+*.tfvars.json
+
+# Local overrides and transient files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+crash.log
+crash.*.log
+*.log
+acr-build.log
+apply.log
+
+# eCommerce: only Azure overrides are committed; setup-ecommerce.ps1 fills the rest
+eCommerce/*
+!eCommerce/.gitignore
+!eCommerce/README.md
+!eCommerce/Dockerfile
+!eCommerce/docker-entrypoint.sh
+!eCommerce/requirements.txt
+!eCommerce/db/
+!eCommerce/db/mysql/
+!eCommerce/db/mysql/Dockerfile
+!eCommerce/eCommerce/
+!eCommerce/eCommerce/settings.py
+!eCommerce/eCommerce/urls.py
+!eCommerce/store/
+!eCommerce/store/apps.py
+!eCommerce/store/signals.py
+!eCommerce/store/urls.py
+!eCommerce/store/utils.py
+!eCommerce/store/views.py
+!eCommerce/templates/
+!eCommerce/templates/store/
+!eCommerce/templates/store/login.html
+!eCommerce/templates/store/main.html
+!eCommerce/templates/store/register.html
+
+# Terraform lock file should be committed for provider consistency
+!.terraform.lock.hcl
+
+# CLI config that may reference credentials
+.terraformrc
+terraform.rc
